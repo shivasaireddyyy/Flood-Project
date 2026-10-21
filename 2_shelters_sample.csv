@@ -1,0 +1,11 @@
+name,lat,lon,type,govt,phone
+DEMO Govt High School (sample),17.391,78.4907,school,yes,
+DEMO Mandal Revenue Office (sample),17.399,78.4987,townhall,yes,+910000000011
+DEMO Municipal Community Hall (sample),17.375,78.4947,community_centre,yes,
+DEMO Govt Junior College (sample),17.405,78.4717,college,yes,
+DEMO Zilla Parishad School (sample),17.367,78.4747,school,yes,
+DEMO Cyclone/Flood Shelter (sample),17.415,78.5087,shelter,yes,
+DEMO Govt General Hospital (sample),17.379,78.4667,hospital,yes,+910000000012
+DEMO Private School (sample),17.389,78.4807,school,no,
+DEMO Private Function Hall (sample),17.373,78.5027,community_centre,no,
+DEMO Private Hospital (sample),17.396,78.4777,hospital,no,

@@ -1,0 +1,21 @@
+{
+  "name": "floodshield-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Capacitor wrapper that turns the FloodShield web UI into an Android / iOS app.",
+  "scripts": {
+    "web": "node copy-web.js",
+    "sync": "node copy-web.js && npx cap sync",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/app": "latest",
+    "@capacitor/cli": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/geolocation": "latest",
+    "@capacitor/ios": "latest",
+    "@capacitor/local-notifications": "latest"
+  }
+}

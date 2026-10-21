@@ -1,0 +1,7 @@
+name,type,lat,lon,phone,email,telegram_chat_id
+DEMO Police Station A (sample),police,17.397,78.4767,+910000000021,police.a@example.com,
+DEMO Police Station B (sample),police,17.363,78.5047,+910000000022,,
+DEMO Fire Station A (sample),fire,17.393,78.5017,+910000000031,,123456789
+DEMO Fire Station B (sample),fire,17.36,78.4667,+910000000032,,
+DEMO Govt Hospital A (sample),hospital,17.379,78.4667,+910000000041,,
+DEMO District Disaster Control Room (sample),other,17.411,78.4927,+910000000051,control.room@example.com,

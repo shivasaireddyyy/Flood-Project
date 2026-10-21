@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FloodShield">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<title>FloodShield</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main id="app">
+
+<!-- ============ HOME ============ -->
+<section class="tab active" id="tab-home">
+  <h1 class="large">FloodShield</h1>
+  <div class="sub">AI flood prediction &amp; rescue assistance</div>
+  <div class="grid" id="tiles"></div>
+  <div class="sec">Status</div>
+  <div class="list" id="status"></div>
+  <p class="note" style="margin:14px 16px">Decision-support tool. Always follow official warnings and local authorities.</p>
+</section>
+
+<!-- ============ INSIGHTS ============ -->
+<section class="tab" id="tab-insights">
+  <h1 class="large">Insights</h1>
+  <div class="sub">How well the models perform</div>
+  <div id="insBody"></div>
+</section>
+
+<!-- ============ MAP ============ -->
+<section class="tab" id="tab-map">
+  <h1 class="large">Map</h1>
+  <div class="sub" id="mapSub">Risk zone, shelters and batch results</div>
+  <div style="margin-top:14px"><div id="map"></div></div>
+  <div class="legend"><span>🟢 Low</span><span>🟠 Medium</span><span>🔴 High</span><span>🔵 Safe place</span><span>🟢 Govt safe house</span><span>🟣 Police / fire / hospital</span></div>
+</section>
+
+<nav class="tabbar">
+  <button class="on" data-tab="home"><span data-ic="grid" data-size="26" data-color="currentColor"></span>Shortcuts</button>
+  <button data-tab="insights"><span data-ic="chart" data-size="26" data-color="currentColor"></span>Insights</button>
+  <button data-tab="map"><span data-ic="map" data-size="26" data-color="currentColor"></span>Map</button>
+</nav>
+
+<!-- ============ SCREEN: REGION ============ -->
+<section class="screen" id="scr-region">
+  <nav class="nav"><button class="back" data-close="region"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>Set Region</b><span></span></nav>
+  <div class="pad">
+    <div class="action">
+      <div class="ahead"><i class="ico" data-ic="pin" data-bg="#007aff"></i>Find a place</div>
+      <div class="abody"><div class="list">
+        <div class="row"><input class="in left" id="q" placeholder="City, district or landmark" autocomplete="off"></div>
+        <div class="row"><label>Latitude</label><input class="in" id="lat" type="number" step="any" value="17.3850"></div>
+        <div class="row"><label>Longitude</label><input class="in" id="lon" type="number" step="any" value="78.4867"></div>
+      </div>
+      <p class="note">Leave the search empty to use the coordinates. <button class="link" id="geoBtn">Use my location</button></p></div>
+    </div>
+    <div class="action">
+      <div class="ahead"><i class="ico" data-ic="layers" data-bg="#5856d6"></i>Search radius <span class="pill" id="radV">5 km</span></div>
+      <div class="abody"><input type="range" id="rad" min="1" max="15" value="5"></div>
+    </div>
+    <div class="action">
+      <div class="ahead"><i class="ico" data-ic="home" data-bg="#34c759"></i>Safe locations from</div>
+      <div class="abody">
+        <div class="seg" id="srcSeg" data-value="osm"><button class="on" data-v="osm">OpenStreetMap</button><button data-v="csv">My CSV</button><button data-v="none">None</button></div>
+        <div id="csvBox" style="display:none;margin-top:10px"><div class="list"><div class="row"><input class="in left" type="file" id="shelterFile" accept=".csv"></div></div>
+        <p class="note">Columns: name, lat, lon, type</p></div>
+      </div>
+    </div>
+    <button class="btn" id="regionBtn">Set Region</button>
+  </div>
+</section>
+
+<!-- ============ SCREEN: DATA ============ -->
+<section class="screen" id="scr-data">
+  <nav class="nav"><button class="back" data-close="data"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>Load Data &amp; Train</b><span></span></nav>
+  <div class="pad">
+    <div class="action">
+      <div class="ahead"><i class="ico" data-ic="database" data-bg="#34c759"></i>Choose dataset</div>
+      <div class="abody">
+        <div class="seg" id="dsSeg" data-value="upload"><button class="on" data-v="upload">Upload CSV</button><button data-v="demo">Demo data</button></div>
+        <div id="upBox" style="margin-top:10px"><div class="list"><div class="row"><input class="in left" type="file" id="dataFile" accept=".csv"></div></div>
+        <p class="note">Any flood, rainfall or hydrology CSV works. Columns are detected automatically.</p></div>
+        <div id="demoBox" style="display:none;margin-top:10px"><button class="btn gray" id="demoBtn">Load demo data</button>
+        <p class="note">Synthetic data for demonstration only. Use a real dataset for results you report.</p></div>
+        <div id="dsInfo" class="note"></div>
+        <div id="preview" class="tbl" style="margin-top:10px;display:none"></div>
+      </div>
+    </div>
+    <div id="cfg" style="display:none">
+      <div class="action">
+        <div class="ahead"><i class="ico" data-ic="alert" data-bg="#ff3b30"></i>Predict <span class="pill" id="tgtPill">target</span></div>
+        <div class="abody">
+          <div class="list"><div class="row"><label>Target column</label><select class="in" id="target"></select></div></div>
+          <div id="tgtDetail" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div class="action">
+        <div class="ahead"><i class="ico" data-ic="layers" data-bg="#af52de"></i>Using features</div>
+        <div class="abody"><div class="chips" id="featChips"></div><p class="note">Tap to include or exclude a column.</p></div>
+      </div>
+      <div class="action">
+        <div class="ahead"><i class="ico" data-ic="chart" data-bg="#ff9500"></i>Test split <span class="pill" id="tsV">20%</span></div>
+        <div class="abody"><input type="range" id="ts" min="10" max="40" step="5" value="20"></div>
+      </div>
+      <button class="btn green" id="trainBtn">Train &amp; Compare 5 Models</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN: RISK ============ -->
+<section class="screen" id="scr-risk">
+  <nav class="nav"><button class="back" data-close="risk"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>Check Flood Risk</b><span></span></nav>
+  <div class="pad" id="riskBody"></div>
+  <div class="runbar" id="runbar" style="display:none"><button class="btn" id="runBtn"><span data-ic="play" data-size="18" data-color="#fff" data-fill="#fff"></span>Run</button></div>
+</section>
+
+<!-- ============ SCREEN: BATCH ============ -->
+<section class="screen" id="scr-batch">
+  <nav class="nav"><button class="back" data-close="batch"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>Batch Risk Map</b><span></span></nav>
+  <div class="pad">
+    <div class="action">
+      <div class="ahead"><i class="ico" data-ic="layers" data-bg="#af52de"></i>Predict many areas</div>
+      <div class="abody"><div class="list"><div class="row"><input class="in left" type="file" id="batchFile" accept=".csv"></div></div>
+      <p class="note">CSV with latitude / longitude columns plus the same feature columns used in training.</p></div>
+    </div>
+    <div id="batchOut"></div>
+  </div>
+</section>
+
+<section class="screen" id="scr-alerts">
+  <nav class="nav"><button class="back" data-close="alerts"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>Alerts</b><span></span></nav>
+  <div class="pad" id="alertsBody"></div>
+</section>
+<section class="screen" id="scr-sos">
+  <nav class="nav"><button class="back" data-close="sos"><span data-ic="back" data-size="22" data-color="currentColor"></span>Shortcuts</button><b>SOS Dispatch</b><span></span></nav>
+  <div class="pad" id="sosBody"></div>
+</section>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+<div class="toast" id="toast"></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
