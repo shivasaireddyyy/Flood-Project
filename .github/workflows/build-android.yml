@@ -1,21 +1,39 @@
+# Builds an installable Android APK in the cloud (GitHub Actions). No Android Studio needed.
+# Copy of .github/workflows/build-android.yml (visible, in case the hidden .github folder is not uploaded).
+# It finds the project folder by itself, so it works even if the files were uploaded inside a sub-folder.
 name: Build Android APK
 
 on:
   workflow_dispatch:
     inputs:
       server_url:
-        description: "Your FloodShield server address (leave empty to type it inside the app)"
+        description: "Your FloodShield server address, e.g. https://abc.ngrok-free.app or http://192.168.1.5:8000 (leave empty to type it inside the app)"
         required: false
         default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+
+      - name: Find the project folder
+        id: loc
+        run: |
+          file=$(find . -type f -path '*/mobile/copy-web.js' -not -path '*/node_modules/*' | head -n 1)
+          if [ -z "$file" ]; then
+            echo "::error::The mobile folder was not found in this repository. It was not uploaded. Files at the top of the repository:"
+            ls -la
+            exit 1
+          fi
+          mobile_dir=$(dirname "$file")
+          echo "Found the project at: $mobile_dir"
+          if [ ! -f "$mobile_dir/../static/index.html" ]; then
+            echo "::error::The static folder is missing next to mobile/. Upload the whole project. Contents next to mobile/:"
+            ls -la "$mobile_dir/.."
+            exit 1
+          fi
+          echo "mobile=$mobile_dir" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         with:
@@ -27,24 +45,29 @@ jobs:
           java-version: 21
 
       - name: Install Capacitor
+        working-directory: ${{ steps.loc.outputs.mobile }}
         run: npm install
 
       - name: Copy the web app (and bake in the server address)
+        working-directory: ${{ steps.loc.outputs.mobile }}
         env:
           FS_SERVER_URL: ${{ github.event.inputs.server_url }}
         run: node copy-web.js
 
       - name: Create the Android project
+        working-directory: ${{ steps.loc.outputs.mobile }}
         run: npx cap add android
 
       - name: Add permissions and icon
+        working-directory: ${{ steps.loc.outputs.mobile }}
         run: python3 patch_android.py
 
       - name: Sync web files and plugins
+        working-directory: ${{ steps.loc.outputs.mobile }}
         run: npx cap sync android
 
       - name: Build debug APK
-        working-directory: mobile/android
+        working-directory: ${{ steps.loc.outputs.mobile }}/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
@@ -53,4 +76,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: FloodShield-debug-apk
-          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ steps.loc.outputs.mobile }}/android/app/build/outputs/apk/debug/app-debug.apk
